@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mahjong</title>
+
+<style>
+
+body {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 10vh;
+  margin: 0;
+  user-select: none;
+}
+
+#container {
+  text-align: center;
+  position: relative;
+  left: -500px;
+  transform: scale(2);
+  transform-origin: center center;
+}
+
+body {
+  font-family: Arial;
+  font-size: 12px;
+  font-weight: bold;
+  color: #FFFFFF;
+  background: #005F00;
+}
+
+a {
+  color: #FF6600;
+}
+
+.div-restart {
+  position: absolute;
+  left: 10px;
+  top: 10px;
+  width: 560px;
+  text-align: center;
+}
+
+.div-board {
+  position: absolute;
+  left: 10px;
+  top: 40px;
+}
+
+.token {
+  position: absolute;
+  overflow: hidden;
+  color: #000000;
+  background: #FFFFFF;
+}
+
+.selector {
+  position: absolute;
+  overflow: hidden;
+  border: 2px solid #00FFFF;
+  color: #000000;
+  background: transparent;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<div id="container">
+  <div id="div-restart" class="div-restart">
+    <a href="javascript: window.location.reload()">Restart</a>
+  </div>
+  <div id="div-board" class="div-board">
+  </div>
+</div>
+
+<script type="text/javascript">
+
+//
+// Game
+//
+function Game() {
+  this.board = new Board();
+
+  this.run = function() {
+    this.board.start();
+  }
+}
+
+//
+// Board
+//
+function Board() {
+  var self = this;
+  this.div = document.getElementById("div-board");
+  
+  this.map       = new Map;
+  this.generator = new PinGenerator;
+  this.tokens    = new Array;
+  this.grid      = new Grid(self.map);
+
+  this.selector = new Selector(self.div, "selector", 
+                               self.map.tokenWidth  - self.map.tokenShadowWidth, 
+                               self.map.tokenHeight - self.map.tokenShadowHeight);
+
+  this.start = function() {
+    self.generator.init(self.map.tokensCount, self.map.tokenRepetition);
+    self.createTokens();
+    self.display();
+    self.activate();
+  }
+  
+  this.createTokens = function() {
+    for (var i = 0; i < self.map.pattern.length; ++ i)
+      for (var j = 0; j < self.map.pattern[i].length; ++ j)
+        self.createColumn(i, j, self.map.pattern[i][j]);
+  }
+  
+  this.createColumn = function(level, column, pattern) {
+    for (var row = 0; pattern != 0; ++ row) {
+      if (pattern & 0x80) {
+        var left = column * (self.map.tokenWidth - self.map.tokenShadowWidth) - level;
+        var top  = row * (self.map.tokenHeight - self.map.tokenShadowHeight) - (level * self.map.tokenShadowHeight);
+        
+        var special    = self.map.getSpecial(level, column, row);
+        var offsetLeft = special? special.perLeft * self.map.tokenWidth : 0;
+        var offsetTop  = special? special.perTop  * self.map.tokenHeight: 0;
+        
+        self.createToken( new Position(level, column, row),
+                         left + offsetLeft, top + offsetTop, 
+                         self.map.tokenWidth, self.map.tokenHeight);
+      }
+      pattern <<= 1;
+    }
+  }
+
+  this.createToken = function(position, left, top, width, height) {
+    var id  = "token" + String(self.tokens.length);
+    var pin = self.generator.generatePin();
+    var img = createImg(id, "token", position.level * 2, left, top, width, height,
+                        self.map.tokenURL + String(pin) + self.map.tokenExtension);
+
+    self.tokens.push( new Token(self, img, position, pin) );
+  }
+  
+  this.display = function() {
+    for (var i in self.tokens)
+      self.div.appendChild(self.tokens[i].img);
+  }
+
+  this.activate = function() {
+    for (var i in self.tokens)
+      self.tokens[i].registerMouse();
+  }
+
+  this.removeToken = function(token) {
+    var rest = new Array;
+    for (var i in self.tokens)
+      if (self.tokens[i] == token)
+        self.div.removeChild(self.tokens[i].img);
+      else
+        rest.push(self.tokens[i]);
+    self.tokens = rest;
+    
+    self.grid.freeCell(token.position);
+  }
+  
+//
+// Mouse - Game Logic
+//  
+  this.onClick = function(token) {
+
+    if ( self.grid.isTokenFree(token) ) {
+      if (!self.selector.token) {
+        self.selector.select(token);
+      }
+      else {
+        if (self.selector.token == token) {
+          self.selector.unselect();
+        }
+        else {
+          if (self.selector.token.pin == token.pin) {
+            self.removeToken(self.selector.token);
+            self.removeToken(token);
+            self.selector.unselect();
+          }
+        }
+      }
+      
+      if (self.tokens.length == 0) {
+        alert("Congratulations!!! You have removed all tokens from the board.");
+      }
+    }
+  }
+}
+
+//
+// Map
+//
+function Map() {
+  this.tokensCount       = 36;
+  this.tokenRepetition   = 4;
+  this.tokenWidth        = 35;
+  this.tokenHeight       = 50;
+  this.tokenShadowWidth  = 2;
+  this.tokenShadowHeight = 5;
+  this.tokenURL          = "tokens/token";
+  this.tokenExtension    = ".png";
+  
+  this.pattern = new Array(
+	new Array(0x00, 0x10, 0x99, 0xBB, 0xFF, 0xFF, 0xFF, 0xFF, 
+	          0xFF, 0xFF, 0xFF, 0xFF, 0xBB, 0x99, 0x10, 0x10),
+	new Array(0x00, 0x00, 0x00, 0x00, 0x00, 0x7E, 0x7E, 0x7E, 
+	          0x7E, 0x7E, 0x7E, 0x00, 0x00, 0x00, 0x00, 0x00),
+	new Array(0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x3C, 0x3C, 
+	          0x3C, 0x3C, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00),
+	new Array(0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x18, 
+	          0x18, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00),
+	new Array(0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
+	          0x10, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00) );
+
+  this.special = new Array( 
+	new Special( new Position(0,  1, 3),    0, 0.5),
+	new Special( new Position(0, 14, 3),    0, 0.5),
+	new Special( new Position(0, 15, 3),    0, 0.5),
+	new Special( new Position(4,  8, 3), -0.5, 0.5) );
+
+  this.blocked = new Array( 
+	new Blocked( new Position(0,  2, 4), null,    0, null),
+	new Blocked( new Position(0, 13, 4), null, null,    1),
+	new Blocked( new Position(3,  7, 3),    3, null, null),
+	new Blocked( new Position(3,  7, 4),    3, null, null),
+	new Blocked( new Position(3,  8, 4),    3, null, null) );
+
+  this.getSpecial = function(level, column, row) {
+    for (var i in this.special)
+      if ( this.special[i].position.isEqual(level, column, row) )
+        return(this.special[i]);
+  }
+  
+  this.getBlocked = function(level, column, row) {
+    for (var i in this.blocked)
+      if ( this.blocked[i].position.isEqual(level, column, row) )
+        return(this.blocked[i]);
+  }
+}
+
+//
+// Grid
+//
+function Grid(map) {
+  this.map   = map;
+  this.cells = this.map.pattern;
+
+  this.isTokenFree = function(token) {
+    var level   = token.position.level;
+    var column  = token.position.column;
+    var row     = token.position.row;
+    
+    var blocked = this.map.getBlocked(level, column, row);
+    
+    return( this.isFree(level + 1, column    , row, blocked, "up"   ) && 
+          ( this.isFree(level    , column - 1, row, blocked, "left" ) || 
+            this.isFree(level    , column + 1, row, blocked, "right") ) );
+  }
+
+  this.isFree = function(level, column, row, blocked, direction) {
+    var free = this.isCellFree(level, column, row);
+    if (free && blocked)
+      if (blocked[direction] != null)
+        return( this.isPositionFree(this.map.special[ blocked[direction] ].position) );
+    return(free);
+  }
+
+  this.isPositionFree = function(position) {
+    return( this.isCellFree(position.level, position.column, position.row) );
+  }
+
+  this.isCellFree = function(level, column, row) {
+    if ( (level < 0) || (level >= this.cells.length) )
+      return(true);
+    if ( (column < 0) || (column >= this.cells[level].length) )
+      return(true);
+    if ( (row < 0) || (row >= 8) )
+      return(true);
+
+    return( ( this.cells[level][column] & (0x80 >> row) ) == 0);
+  }
+  
+  this.freeCell = function(position) {
+    var column = this.cells[position.level][position.column];
+    this.cells[position.level][position.column] = column & ~(0x80 >> position.row);
+  }
+}
+
+//
+// Token Position
+//
+function Position(level, column, row) {
+  this.level  = level;
+  this.column = column;
+  this.row    = row;
+
+  this.isEqual = function(level, column, row) {
+    return( (this.level  == level ) &&
+            (this.column == column) &&
+            (this.row    == row   ) );
+  }
+}
+
+//
+// Special Token Position
+//
+function Special(position, perLeft, perTop) {
+  this.position = position;
+  this.perLeft  = perLeft;  
+  this.perTop   = perTop;
+}
+
+//
+// Blocked Token Position
+//
+function Blocked(position, up, left, right) {
+  this.position = position;
+  this.up       = up;
+  this.left     = left;
+  this.right    = right;
+}
+
+//
+// Generator (Pin: Picture Number)
+//
+function PinGenerator() {
+  this.group     = 0;
+  this.generated = 0;
+  this.bucket    = new Array;
+
+  this.init = function(tokensCount, tokenRepetition) {
+    this.group = tokenRepetition;
+    for (var i = 0; i < tokensCount; ++ i)
+      this.bucket[i] = this.group;
+  }
+  
+  this.generatePin = function() {
+    var pin = this.adjustPin( this.randomPin(), this.group);
+
+    if (++ this.generated == this.bucket.length){
+       this.generated = 0
+       -- this.group;
+      }
+    
+    return(pin);
+  }
+  
+  this.randomPin = function() {
+    return( Math.round( Math.random() * (this.bucket.length - 1) ) );
+  }
+  
+  this.adjustPin = function(pin, group) {
+    while(this.bucket[pin] != group) {
+      if (++ pin == this.bucket.length)
+        pin = 0;
+    }
+    -- this.bucket[pin];
+
+    return(pin);
+  }
+}  
+
+//
+// Token
+//
+function Token(board, img, position, pin) {
+  var self = this;
+  
+  this.board    = board;
+  this.img      = img;
+  this.position = position;
+  this.pin      = pin;
+  
+  this.registerMouse = function() {
+    self.img.onclick = self.onClick;
+  }
+  
+  this.onClick = function(e) {
+	self.board.onClick(self);
+  }
+}
+
+//
+// Selector
+//
+function Selector(board, className, width, height) {
+  var self   = this;
+  this.board = board;
+  this.div   = document.createElement("div");
+
+  this.div.className    = className;
+  this.div.style.width  = String(width)  + "px";
+  this.div.style.height = String(height) + "px";
+
+  this.token = null;
+  
+  this.select = function(token) {
+    self.show(token);
+    self.registerMouse();
+    self.token = token;
+  }
+  
+  this.unselect = function() {
+    self.hide();
+    self.token = null;
+  }
+  
+  this.show = function(token) {
+    self.div.style.zIndex = Number(token.img.style.zIndex) + 1;
+    self.div.style.left   = String( pxToNumber(token.img.style.left) - 1) + "px";
+    self.div.style.top    = String( pxToNumber(token.img.style.top)  - 1) + "px";
+    if (!self.token)
+      board.appendChild(self.div);
+  }
+  
+  this.hide = function() {
+    if (self.token)
+      self.board.removeChild(self.div);
+  }
+  
+  this.registerMouse = function() {
+    self.div.onclick = self.onClick;
+  }
+  
+  this.onClick = function(e) {
+	self.token.onClick(e);
+  }
+}
+
+//
+// Utils
+//
+function createImg(id, className, zIndex, left, top, width, height, src) {
+  var img = document.createElement("img");
+    
+  img.id           = id;
+  img.className    = className;
+  img.style.zIndex = zIndex;
+  img.style.left   = String(left)   + "px";
+  img.style.top    = String(top)    + "px";
+  img.style.width  = String(width)  + "px";
+  img.style.height = String(height) + "px";
+  img.src          = src;
+  
+  return(img);
+}
+
+function pxToNumber(s) {
+  return( Number( s.substring(0, s.length - 2) ) );
+}
+
+
+//
+// Instance and start Game
+//
+var game = new Game;
+game.run();
+
+</script>
+
+</html>

@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>YCrCb</title>
+
+  <style>
+    body {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      margin: 0;
+      user-select: none;
+    }
+    #container {
+      text-align: center;
+    }
+    canvas {
+      width: 250px;
+      height: 250px;
+    }
+  </style>
+
+  <script>
+    var selector, contextImage, contextSkin, contextCb, contexCr;
+    var image, imageOriginal, imageSkin;
+    var rect, cb, cr;
+
+    function onLoad(){
+      selector = document.getElementById("selector");
+
+      contextImage = document.getElementById("canvasImage").getContext("2d");;
+      contextSkin = document.getElementById("canvasSkin").getContext("2d");;
+      contextCb = document.getElementById("canvasCb").getContext("2d");;
+      contextCr = document.getElementById("canvasCr").getContext("2d");;
+      
+      image = new Image();
+      
+      contextCb.canvas.addEventListener("click", onClickCb, false);
+      contextCr.canvas.addEventListener("click", onClickCr, false);
+      contextImage.canvas.addEventListener("click", onClick, false);
+      document.onmousemove = onMouseMove;
+      document.onkeydown = onKeyDown;
+      
+      onChange();
+    };
+  
+    function onChange(){
+      image.src = "img/" + selector.options[selector.selectedIndex].value;
+
+      image.onload = function(){
+        rect = {x1: 0,
+                y1: 0, 
+                x2: parseInt(contextImage.canvas.width),
+                y2: parseInt(contextImage.canvas.height) };
+        
+        drawImage();
+        calculateHist( getFocusImage() );
+        drawHist(contextCb, cb, "blue");
+        drawHist(contextCr, cr, "red");
+        drawSkin();
+        
+        rect = undefined;
+      }
+    };
+
+    function onClickCb(event){
+      var point = event2point(event, contextCb);
+      if (point.x >= 5 && point.x <= 260){
+        if ( Math.abs(cb.thresMin - point.x) <= Math.abs(cb.thresMax - point.x) ){
+          cb.thresMin = point.x - 5;
+        }else{
+          cb.thresMax = point.x - 5;
+        }
+        drawHist(contextCb, cb, "blue");
+        drawSkin();
+      }
+    };
+
+    function onClickCr(event){
+      var point = event2point(event, contextCr);
+      if (point.x >= 5 && point.x <= 260){
+        if ( Math.abs(cr.thresMin - point.x) <= Math.abs(cr.thresMax - point.x) ){
+          cr.thresMin = point.x - 5;
+        }else{
+          cr.thresMax = point.x - 5;
+        }
+        drawHist(contextCr, cr, "red");
+        drawSkin();
+      }
+    };
+
+    function onClick(event){
+      if (rect){
+        calculateHist( getFocusImage() );
+        drawHist(contextCb, cb, "blue");
+        drawHist(contextCr, cr, "red");
+        
+        rect = undefined;
+      }else{
+        var point = event2point(event, contextImage);
+        
+        rect = {};
+        rect.x1 = point.x;
+        rect.y1 = point.y;
+      }
+    };
+
+    function onMouseMove(event){
+      if (rect){
+        var point = event2point(event, contextImage);
+        rect.x2 = point.x;
+        rect.y2 = point.y;
+        
+        drawImage();
+        drawFocus();
+      }
+    };
+    
+    function onKeyDown(event){
+      if (event.keyCode === 27){
+        rect = {x1: 0,
+                y1: 0, 
+                x2: parseInt(contextImage.canvas.width),
+                y2: parseInt(contextImage.canvas.height) };
+        
+        drawImage();
+        calculateHist( getFocusImage() );
+        drawHist(contextCb, cb, "blue");
+        drawHist(contextCr, cr, "red");
+        drawSkin();
+
+        rect = undefined;
+      }
+    };
+    
+    function event2point(event, context){
+      return {x: event.clientX - context.canvas.offsetLeft,
+              y: event.clientY - context.canvas.offsetTop};
+    };
+    
+    function calculateHist(img){
+     var src = img.image.data, len = src.length,
+         i = 0, color;
+         
+      cb = {data: [], max: 0, thresMin: 80,  thresMax: 120};
+      cr = {data: [], max: 0, thresMin: 133, thresMax: 173};
+      
+      for (i = 0; i < 256; ++ i){
+        cb.data[i] = 0;
+        cr.data[i] = 0;
+      }
+
+      for(i = 0; i < len; i += 4){
+        color = rgb2ycbcr(src[i]/255, src[i + 1]/255, src[i + 2]/255);
+        
+        cb.data[color.cb] ++;
+        cr.data[color.cr] ++;
+        
+        cb.max = Math.max(cb.max, cb.data[color.cb]);
+        cr.max = Math.max(cr.max, cr.data[color.cr]);
+      }
+      
+      for (i = 0; i < 256; ++ i){
+        if (cb.max > 1){
+          cb.data[i] /= cb.max;
+        }
+        if (cr.max > 1){
+          cr.data[i] /= cr.max;
+        }
+      }
+    };
+    
+    function maskSkin(imageSrc, imageDst){
+     var src = imageSrc.data, dst = imageDst.data, len = src.length,
+         i = 0, color;
+
+      for(; i !== len; i += 4){
+        color = rgb2ycbcr(src[i]/255, src[i + 1]/255, src[i + 2]/255);
+        
+        if (color.cb >= cb.thresMin && color.cb <= cb.thresMax &&
+            color.cr >= cr.thresMin && color.cr <= cr.thresMax){
+          dst[i] = src[i];
+          dst[i + 1] = src[i + 1];
+          dst[i + 2] = src[i + 2];
+          dst[i + 3] = 255;
+        }else{
+          dst[i] = dst[i + 1] = dst[i + 2] = dst[i + 3] = 255;
+        }
+      }
+      
+      return dst;
+    };
+
+    function rgb2ycbcr(r, g, b){
+      return {y: (16 + 65.481 * r + 128.553 * g + 24.966 * b) | 0,
+              cb: (128 - 37.797 * r - 74.203 * g + 112 * b) | 0,
+              cr: (128 + 112 * r - 93.786 * g - 18.214 * b) | 0};
+    };
+
+    function getFocusImage(){
+      var img =
+        {x: Math.min(rect.x1, rect.x2),
+         y: Math.min(rect.y1, rect.y2),
+         w: Math.abs(rect.x2 - rect.x1) + 1,
+         h: Math.abs(rect.y2 - rect.y1) + 1};
+      
+      img.image = contextImage.getImageData(img.x, img.y, img.w, img.h);
+              
+      return img;
+    };
+
+    function drawImage(){
+        var width = parseInt(contextImage.canvas.width),
+            height = parseInt(contextImage.canvas.height);
+            
+        contextImage.drawImage(image, 0, 0, width, height);
+
+        imageOriginal = contextImage.getImageData(0, 0, width, height);
+    };
+    
+    function drawSkin(){
+        var width = parseInt(contextImage.canvas.width),
+            height = parseInt(contextImage.canvas.height);
+      
+        imageSkin = contextSkin.getImageData(0, 0, width, height);
+        maskSkin(imageOriginal, imageSkin);
+        contextSkin.putImageData(imageSkin, 0, 0);
+    };
+    
+    function drawFocus(){
+      var img = getFocusImage(), data = img.image.data,
+          i, j;
+      
+      for (i = j = 0; i < img.w; ++ i, j += 4){
+        drawFocusPixel(data, j);
+      }
+      for (i = 0; i < img.h - 2; ++ i, j += 4){
+        drawFocusPixel(data, j);
+        j += img.w * 4 - 4;
+        drawFocusPixel(data, j);
+      }
+      for (i = 0; i < img.w; ++ i, j += 4){
+        drawFocusPixel(data, j);
+      }
+      
+      contextImage.putImageData(img.image, img.x, img.y);
+    };
+    
+    function drawFocusPixel(data, pos){
+      data[pos] = 255 - data[pos];
+      data[pos + 1] = 255 - data[pos + 1];
+      data[pos + 2] = 255 - data[pos + 2];
+    };
+
+    function drawHist(context, hist, color){
+      var w = parseInt(context.canvas.width),
+          h = parseInt(context.canvas.height),
+          i;
+      
+      context.clearRect(0, 0, w, h);
+      
+      context.beginPath();
+      context.strokeStyle = "black";
+      context.moveTo(5, h - 20);
+      context.lineTo(w - 10, h - 20);
+      context.stroke();
+      context.closePath();
+
+      context.beginPath();
+      context.fillStyle = "black";
+      for (i = 0; i < 256; i += 50){
+        context.moveTo(5 + i, h - 20);
+        context.lineTo(5 + i, h - 20 + 5);
+        context.fillText(i, 5 + i - context.measureText(i).width / 2, h - 5);
+      }
+      context.fillText("Min: " + hist.thresMin, 5, 15);
+      context.fillText("Max: " + hist.thresMax, 5, 25);
+      context.stroke();
+      context.closePath();
+
+      context.fillStyle = "#FFEC94";
+      context.fillRect(5 + hist.thresMin, 5, hist.thresMax - hist.thresMin, h - 25 - 1);
+
+      context.beginPath();
+      context.strokeStyle = color;
+      for (i = 0; i < 256; ++ i){
+        context.moveTo(5 + i, h - 20);
+        context.lineTo(5 + i, h - 20 - hist.data[i] * (h - 25) );
+      }
+      context.stroke();
+      context.closePath();
+    };
+  </script>
+</head>
+
+<body onload="onLoad();">
+
+  <div id="container">
+    <div>
+      <canvas id="canvasImage" width="270px" height="270px" style="border:1px solid #000000; cursor: crosshair;"></canvas>
+      <canvas id="canvasSkin" width="270px" height="270px" style="border:1px solid #000000;"></canvas>
+    </div>
+    <div>
+      <canvas id="canvasCb" width="270px" height="270px" style="border:1px dotted #000000; cursor: pointer;"></canvas>
+      <canvas id="canvasCr" width="270px" height="270px" style="border:1px dotted #000000; cursor: pointer;"></canvas>
+    </div>
+    <div>
+      Imagen:
+      <select id="selector" onChange="onChange();">
+        <option value="liu.png">Lucy</option>
+        <option value="kidman.png">Nicole</option>
+        <option value="goldberg.png">Whoopi</option>
+      </select>
+    </div>
+  </div>
+
+</body>
+
+</html>

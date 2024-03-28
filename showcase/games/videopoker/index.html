@@ -1,0 +1,735 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Videopoker</title>
+
+<style>
+
+body {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 10vh;
+  margin: 0;
+  user-select: none;
+}
+
+
+body {
+  font-family: Arial;
+  font-size: 12px;
+  color: #FFFFFF;
+  background: #000000;
+}
+
+.div-game {
+  margin: 3% auto;
+  width: 440px;
+  color: #FFFFFF;
+  background: #4F4F4F;
+  border-right: 1px solid #7F7F7F;
+  border-top: 1px solid #7F7F7F;
+}
+.div-pay {
+  position: relative;
+  margin: 10px;
+  padding: 10px;
+  font-weight: bold;
+  color: #AFAFAF;
+  background: #000000;
+  border-left: 2px solid #7F7F7F;
+  border-bottom: 2px solid #7F7F7F;
+}
+.table-pay {
+  margin: auto;
+}
+.table-pay td {
+  border: 1px solid #5F0000;
+}
+.div-pay-hand {
+  width: 150px;
+  font-family: Verdana;
+  font-size: 12px;
+  text-align: left;
+}
+.div-pay-money {
+  width: 45px;
+  font-family: Courier;
+  font-size: 12px;
+  text-align: right;
+}
+
+.div-board {
+  position: relative;
+  margin: 5px 10px;
+  padding: 5px 10px;
+  color: #FFFFFF;
+  background: #00002F;
+  border-left: 2px solid #7F7F7F;
+  border-bottom: 2px solid #7F7F7F;
+}
+
+.table-score {
+  margin: auto;
+}
+.div-credit, .credit, .div-bet, .bet {
+  font-family: Verdana;
+  font-size: 16px;
+  font-weight: bold;
+}
+.div-credit {
+  width: 60px;
+  text-align: right;
+  color: #00AF00;
+  background: transparent;
+}
+.credit {
+  width: 150px;
+  padding-left: 5px;
+  color: #00FF00;
+  background: transparent;
+}
+.div-bet {
+  width: 155px;
+  text-align: right;
+  color: #AF0000;
+  background: transparent;
+}
+.bet {
+  width: 15px;
+  padding-left: 5px;
+  color: #FF0000;
+  background: transparent;
+}
+
+.table-cards {
+  margin: auto;
+}
+.img-card {
+  overflow: hidden;
+  margin: 15px 5px 10px;
+}
+
+.div-message {
+  height: 15px;
+  font-family: Verdana;
+  font-size: 12px;
+  font-weight: bold;
+  text-align: center;
+  color: #CFCF00;
+  background: transparent;
+}
+
+.div-button {
+  position: relative;
+  margin: 5px;
+  padding: 10px;
+  text-align: center;
+}
+.bn {
+  width: 100px;
+}
+
+.span-preload {
+  display: none;
+}
+
+</style>
+
+</head>
+
+<body onload="game.run();">
+<div id="div-game" class="div-game">
+<div id="div-pay" class="div-pay">
+<table id="table-pay" class="table-pay" cellspacing="0" cellpadding="0">
+<tr>
+<td><div id="rf" class="div-pay-hand">Royal Flush</div></td>
+<td><div id="rf-1" class="div-pay-money">250</div></td>
+<td><div id="rf-2" class="div-pay-money">500</div></td>
+<td><div id="rf-3" class="div-pay-money">750</div></td>
+<td><div id="rf-4" class="div-pay-money">1000</div></td>
+<td><div id="rf-5" class="div-pay-money">5000</div></td>
+</tr>
+<tr>
+<td><div id="sf" class="div-pay-hand">Straight Flush</div></td>
+<td><div id="sf-1" class="div-pay-money">50</div></td>
+<td><div id="sf-2" class="div-pay-money">100</div></td>
+<td><div id="sf-3" class="div-pay-money">150</div></td>
+<td><div id="sf-4" class="div-pay-money">200</div></td>
+<td><div id="sf-5" class="div-pay-money">250</div></td>
+</tr>
+<tr>
+<td><div id="fk" class="div-pay-hand">Four of a Kind</div></td>
+<td><div id="fk-1" class="div-pay-money">25</div></td>
+<td><div id="fk-2" class="div-pay-money">50</div></td>
+<td><div id="fk-3" class="div-pay-money">75</div></td>
+<td><div id="fk-4" class="div-pay-money">100</div></td>
+<td><div id="fk-5" class="div-pay-money">125</div></td>
+</tr>
+<tr>
+<td><div id="fh" class="div-pay-hand">Full House</div></td>
+<td><div id="fh-1" class="div-pay-money">9</div></td>
+<td><div id="fh-2" class="div-pay-money">18</div></td>
+<td><div id="fh-3" class="div-pay-money">27</div></td>
+<td><div id="fh-4" class="div-pay-money">36</div></td>
+<td><div id="fh-5" class="div-pay-money">45</div></td>
+</tr>
+<tr>
+<td><div id="fl" class="div-pay-hand">Flush</div></td>
+<td><div id="fl-1" class="div-pay-money">6</div></td>
+<td><div id="fl-2" class="div-pay-money">12</div></td>
+<td><div id="fl-3" class="div-pay-money">18</div></td>
+<td><div id="fl-4" class="div-pay-money">24</div></td>
+<td><div id="fl-5" class="div-pay-money">30</div></td>
+</tr>
+<tr>
+<td><div id="st" class="div-pay-hand">Straight</div></td>
+<td><div id="st-1" class="div-pay-money">4</div></td>
+<td><div id="st-2" class="div-pay-money">8</div></td>
+<td><div id="st-3" class="div-pay-money">12</div></td>
+<td><div id="st-4" class="div-pay-money">16</div></td>
+<td><div id="st-5" class="div-pay-money">20</div></td>
+</tr>
+<tr>
+<td><div id="tk" class="div-pay-hand">Three of a Kind</div></td>
+<td><div id="tk-1" class="div-pay-money">3</div></td>
+<td><div id="tk-2" class="div-pay-money">6</div></td>
+<td><div id="tk-3" class="div-pay-money">9</div></td>
+<td><div id="tk-4" class="div-pay-money">12</div></td>
+<td><div id="tk-5" class="div-pay-money">15</div></td>
+</tr>
+<tr>
+<td><div id="tp" class="div-pay-hand">Two Pair</div></td>
+<td><div id="tp-1" class="div-pay-money">2</div></td>
+<td><div id="tp-2" class="div-pay-money">4</div></td>
+<td><div id="tp-3" class="div-pay-money">6</div></td>
+<td><div id="tp-4" class="div-pay-money">8</div></td>
+<td><div id="tp-5" class="div-pay-money">10</div></td>
+</tr>
+<tr>
+<td><div id="jb" class="div-pay-hand">Jacks or Better</div></td>
+<td><div id="jb-1" class="div-pay-money">1</div></td>
+<td><div id="jb-2" class="div-pay-money">2</div></td>
+<td><div id="jb-3" class="div-pay-money">3</div></td>
+<td><div id="jb-4" class="div-pay-money">4</div></td>
+<td><div id="jb-5" class="div-pay-money">5</div></td>
+</tr>
+</table>
+</div>
+<div id="div-board" class="div-board">
+<table id="table-score" class="table-score" cellspacing="0" cellpadding="0">
+<tr>
+<td><div id="div-credit" class="div-credit">Credit:</div></td>
+<td><div id="credit" class="credit"></div></td>
+<td><div id="div-bet" class="div-bet">Bet:</div></td>
+<td><div id="bet" class="bet"></div></td>
+</tr>
+</table>
+<table id="table-cards" class="table-cards" cellspacing="0" cellpadding="0">
+<tr>
+<td><img id="card0" class="img-card" src="img/reverse.png" onclick="game.onDiscard(0);" /></td>
+<td><img id="card1" class="img-card" src="img/reverse.png" onclick="game.onDiscard(1);" /></td>
+<td><img id="card2" class="img-card" src="img/reverse.png" onclick="game.onDiscard(2);" /></td>
+<td><img id="card3" class="img-card" src="img/reverse.png" onclick="game.onDiscard(3);" /></td>
+<td><img id="card4" class="img-card" src="img/reverse.png" onclick="game.onDiscard(4);" /></td>
+</tr>
+</table>
+<div id="div-message" class="div-message">Loading...</div>
+</div>
+<div id="div-button" class="div-button">
+<input id="bn-max" type="button" class="bn" value="Bet Max" onclick="game.onBetMax();" name="bn-max" disabled/>
+<input id="bn-deal" type="button" class="bn" value="Deal" onclick="game.onDeal();" name="bn-deal" disabled/>
+<input id="bn-one" type="button" class="bn" value="Bet One" onclick="game.onBetOne();" name="bn-one" disabled/>
+</div>
+</div>
+
+
+<span id="span-preload" class="span-preload">
+<img id="img0" src="img/card0.png" />
+<img id="img1" src="img/card1.png" />
+<img id="img2" src="img/card2.png" />
+<img id="img3" src="img/card3.png" />
+<img id="img4" src="img/card4.png" />
+<img id="img5" src="img/card5.png" />
+<img id="img6" src="img/card6.png" />
+<img id="img7" src="img/card7.png" />
+<img id="img8" src="img/card8.png" />
+<img id="img9" src="img/card9.png" />
+<img id="img10" src="img/card10.png" />
+<img id="img11" src="img/card11.png" />
+<img id="img12" src="img/card12.png" />
+<img id="img13" src="img/card13.png" />
+<img id="img14" src="img/card14.png" />
+<img id="img15" src="img/card15.png" />
+<img id="img16" src="img/card16.png" />
+<img id="img17" src="img/card17.png" />
+<img id="img18" src="img/card18.png" />
+<img id="img19" src="img/card19.png" />
+<img id="img20" src="img/card20.png" />
+<img id="img21" src="img/card21.png" />
+<img id="img22" src="img/card22.png" />
+<img id="img23" src="img/card23.png" />
+<img id="img24" src="img/card24.png" />
+<img id="img25" src="img/card25.png" />
+<img id="img26" src="img/card26.png" />
+<img id="img27" src="img/card27.png" />
+<img id="img28" src="img/card28.png" />
+<img id="img29" src="img/card29.png" />
+<img id="img30" src="img/card30.png" />
+<img id="img31" src="img/card31.png" />
+<img id="img32" src="img/card32.png" />
+<img id="img33" src="img/card33.png" />
+<img id="img34" src="img/card34.png" />
+<img id="img35" src="img/card35.png" />
+<img id="img36" src="img/card36.png" />
+<img id="img37" src="img/card37.png" />
+<img id="img38" src="img/card38.png" />
+<img id="img39" src="img/card39.png" />
+<img id="img40" src="img/card40.png" />
+<img id="img41" src="img/card41.png" />
+<img id="img42" src="img/card42.png" />
+<img id="img43" src="img/card43.png" />
+<img id="img44" src="img/card44.png" />
+<img id="img45" src="img/card45.png" />
+<img id="img46" src="img/card46.png" />
+<img id="img47" src="img/card47.png" />
+<img id="img48" src="img/card48.png" />
+<img id="img49" src="img/card49.png" />
+<img id="img50" src="img/card50.png" />
+<img id="img51" src="img/card51.png" />
+</span>
+
+<script type="text/javascript">
+
+//
+// Game
+//
+function Game() {
+  var self = this;
+
+  this.player   = new Player(100);
+  this.croupier = new Croupier();
+  this.board    = new Board();
+  this.ruler    = new Ruler();
+  
+  this.round = 1;
+  this.cards = self.croupier.popCards(5);
+
+  this.run = function() {
+    self.start();
+  }
+  this.start = function() {
+    self.discardAll();
+    self.board.showCredit(self.player.credit);
+    self.board.showBet();
+    self.board.showCards(self.cards);
+    self.board.enableBet(true);
+  }
+
+  this.bet = function(bet) {
+    if (0 == self.board.bet)
+      self.discardAll();
+    if ( self.player.canBet(bet) )
+      if ( self.board.canBet(bet) )
+        self.doBet(bet);
+  }
+  this.doBet = function(bet) {
+    self.player.doBet(bet);
+    self.board.showCredit(self.player.credit);
+    self.board.doBet(bet);
+    self.board.showBet();
+    self.board.showPay();
+    self.board.enableDeal(true);
+  }  
+
+  this.deal = function() {
+    if (1 == self.round)
+      self.firstRound()
+    else
+      self.secondRound();
+  }
+    
+  this.firstRound = function() {
+    self.board.enableBet(false);
+    self.croupier.shuffle();
+    self.popFirstHand();
+    self.round = 2;
+    self.board.showMessage("Discard");
+  }
+
+  this.secondRound = function() {
+    self.board.showMessage("");
+    self.popSecondHand();
+    var hand = self.ruler.getHand(self.cards);
+    self.pay(hand);
+    self.board.unBet();
+    self.board.showBet();
+    self.board.showPay();
+    self.prize(hand);
+    self.round = 1;
+    self.board.enableDeal(false);
+    self.board.enableBet(true);
+    self.checkCredit();
+  }
+
+  this.popFirstHand = function() {
+    self.cards = self.croupier.popCards(5);
+    self.board.showCards(self.cards);
+  }
+  this.popSecondHand = function() {
+    for (var i in self.cards)
+      if (self.cards[i].down)
+        self.cards[i] = self.croupier.popCard();
+    self.board.showCards(self.cards);
+  }
+
+  this.discard = function(position) {
+    if (2 == self.round) {
+      self.cards[position].flip();
+      self.board.showCard(position, self.cards[position]);
+    }
+  }
+
+  this.pay = function(hand) {
+    if (hand){
+      self.player.pay( self.board.getPay(hand) );
+      self.board.showCredit(self.player.credit);
+    }
+  }
+  this.prize = function(hand) {
+    if (hand){
+      self.board.hilitePrize(hand);
+      self.board.showMessage( self.board.getHand(hand) + "!");
+    }
+  }
+  this.checkCredit = function() {
+    if (0 == self.player.credit){
+      alert("Your credit have been restored");
+      self.player.pay(100);
+      self.board.showCredit(self.player.credit);
+    }
+  }
+
+  this.discardAll = function() {
+    self.board.unhilitePrize();
+    self.board.showPay();
+    self.discardCards();
+    self.board.showMessage("");
+  }
+  this.discardCards = function() {
+    for (var i in self.cards)
+      self.cards[i].down = true;
+    self.board.showCards(self.cards);
+  }
+
+  this.onBetOne = function() {
+    self.bet(1);
+  }
+  this.onBetMax = function() {
+    self.bet(self.board.maxBet - self.board.bet);
+  }
+  this.onDeal = function() {
+    self.deal();
+  }
+  this.onDiscard = function(card) {
+    self.discard(card);
+  }
+}
+
+//
+// Ruler
+//
+function Ruler() {
+  var self = this;
+  
+  this.suits   = new Array(4);
+  this.numbers = new Array(13 + 1);
+  
+  this.getHand = function(cards) {
+    self.countCards(cards);
+    return( self.hand() );
+  }
+
+  this.countCards = function(cards) {
+    self.clear();
+    for (var i in cards) {
+      ++ self.suits[cards[i].suit];
+
+      ++ self.numbers[cards[i].number - 1];
+      if (1 == cards[i].number)
+        ++ self.numbers[self.numbers.length - 1];
+    }
+  }
+  this.clear = function() {
+    for (var i = 0; i < self.suits.length; ++ i) 
+      self.suits[i] = 0;
+    for (var i = 0; i < self.numbers.length; ++ i) 
+      self.numbers[i] = 0;
+  }
+
+  this.hand = function() {
+    if ( self.royalFlush()    ) return("rf");
+    if ( self.straightFlush() ) return("sf");
+    if ( self.fourOfAKind()   ) return("fk");
+    if ( self.fullHouse()     ) return("fh");
+    if ( self.flush()         ) return("fl");
+    if ( self.straight()      ) return("st");
+    if ( self.threeOfAKind()  ) return("tk");
+    if ( self.twoPair()       ) return("tp");
+    if ( self.jacksOrBetter() ) return("jb");
+    return("");
+  }
+
+  this.royalFlush = function() {
+    return( self.countSuits(5) && self.secuenceFrom(10, 5) );
+  }
+  this.straightFlush = function() {
+    return( self.countSuits(5) && self.secuence(5) );
+  }
+  this.fourOfAKind = function() {
+    return( self.countNumbers(4) );
+  }
+  this.fullHouse = function() {
+    return( self.countNumbers(2) && self.countNumbers(3) );
+  }
+  this.flush = function() {
+    return( self.countSuits(5) );
+  }
+  this.straight = function() {
+    return( self.secuence(5) );
+  }
+  this.threeOfAKind = function() {
+    return( self.countNumbers(3) );
+  }
+  this.twoPair = function() {
+    return( self.countNumbers(2) == 2 );
+  }
+  this.jacksOrBetter = function() {
+    return( self.countNumbersFrom(11, 2) );
+  }
+
+  this.countSuits = function(group) {
+    return( self.count(self.suits, 0, group) );
+  }
+  this.countNumbers = function(group) {
+    return( self.countNumbersFrom(2, group) );
+  }
+  this.countNumbersFrom = function(number, group) {
+    return( self.count(self.numbers, number - 1, group) );
+  }
+  this.count = function(elements, offset, pattern) {
+    var count = 0;
+    for (var i = offset; i < elements.length; ++ i)
+      if (elements[i] == pattern)
+        ++ count;
+    return(count);
+  }
+
+  this.secuence = function(group) {
+    return( self.secuenceFrom(1, group) || self.secuenceFrom(2, group) );
+  }
+  this.secuenceFrom = function(number, group) {
+    var offset = number - 1;
+    var start  = self.secuenceStart(offset);
+    var end    = self.secuenceEnd(start + 1);
+    return( (start >= offset) && ( (end - start + 1) == group ) );
+  }
+  this.secuenceStart = function(offset) {
+    for (var i = offset; i < self.numbers.length; ++ i)
+      if (0 != self.numbers[i])
+        break;
+    return(i);
+  }
+  this.secuenceEnd = function(offset) {
+    for (var i = offset; i < self.numbers.length; ++ i)
+      if (1 != self.numbers[i])
+       break;
+    return(i - 1);
+  }
+}
+
+//
+// Board
+//
+function Board() {
+  var self = this;
+
+  this.imgPath = "img/";
+  
+  this.hands   = new Array("rf", "sf", "fk", "fh", "fl", "st", "tk", "tp", "jb");
+
+  this.maxBet  = 5;
+  this.bet     = 0;
+  this.prevBet = 0;
+
+  this.canBet = function(bet) {
+    return( (self.bet + bet) <= self.maxBet );
+  }
+  this.doBet = function(bet) {
+    self.prevBet = self.bet;
+    self.bet += bet;
+  }
+  this.unBet = function(bet) {
+    self.prevBet = self.bet;
+    self.bet = 0;
+  }
+
+  this.getPay = function(hand) {
+    return( Number( getHTMLElement( hand + "-" + String(self.bet) ).innerHTML ) );
+  }
+  this.getHand = function(hand) {
+    return( getHTMLElement(hand).innerHTML );
+  }
+
+  this.showCredit = function(credit) {
+    getHTMLElement("credit").innerHTML = String(credit);
+  }
+  this.showBet = function() {
+    getHTMLElement("bet").innerHTML = String(self.bet);
+  }
+  this.showMessage = function(message) {
+    getHTMLElement("div-message").innerHTML = message;
+  }
+  
+  this.showCards = function(cards) {
+    for (var i in cards)
+      self.showCard(i, cards[i]);
+  }
+  this.showCard = function(position, card) {
+    getHTMLElement( "card" + String(position) ).src = self.getCardImage(card);
+  }
+  this.getCardImage = function(card) {
+    return( self.imgPath + ( card.down? "reverse": "card" + String(card.id) ) + ".png" );
+  }
+
+  this.showPay = function() {
+    for (var i in self.hands) {
+      self.unhilitePay(self.hands[i], self.prevBet);
+      self.hilitePay(self.hands[i], self.bet);
+    }
+  } 
+  this.unhilitePay = function(hand, bet) {
+    self.setColorPay(hand, bet, "#AFAFAF");
+  }
+  this.hilitePay = function(hand, bet) {
+    self.setColorPay(hand, bet, "#CFCF00");
+  }
+  this.setColorPay = function(hand, bet, color) {
+    if (bet)
+      getHTMLElement( hand + "-" + String(bet) ).style.color = color;
+  }
+
+  this.hilitePrize = function(hand) {
+    self.setColorPrize(hand, "#FFFFFF");
+    self.setColorPay(hand, self.prevBet, "#FFFFFF");
+  }
+  this.unhilitePrize = function() {
+    for (var i in self.hands)
+      self.setColorPrize(self.hands[i], "#AFAFAF");
+  }
+  this.setColorPrize = function(hand, color) {
+    getHTMLElement(hand).style.color = color;
+  }
+
+  this.enableDeal = function(state) {
+    getHTMLElement("bn-deal").disabled = !state;
+  }
+  this.enableBet = function(state) {
+    getHTMLElement("bn-one").disabled = !state;
+    getHTMLElement("bn-max").disabled = !state;
+  }
+}
+
+//
+// Croupier
+//
+function Croupier() {
+  var self = this;
+
+  this.deck = new Array(52);
+  this.top  = 0;
+
+  this.shuffle = function() {
+    for (var i in self.deck)
+      self.swapCard(i, rand(self.deck.length) );
+    self.top = 0;
+  }
+  this.swapCard = function(i, j) {
+    var tmp = self.deck[i];
+    self.deck[i] = self.deck[j];
+    self.deck[j] = tmp;
+  }
+
+  this.popCards = function(requested) {
+    var cards = new Array();
+    for (var i = 0; i < requested; ++ i)
+      cards[i] = self.popCard();
+    return(cards);
+  }
+  this.popCard = function() {
+    return( new Card( self.deck[self.top ++] ) );
+  }
+  
+//Create deck on constructor
+  for (var i = 0; i < self.deck.length; ++ i)
+    self.deck[i] = i;
+}
+
+//
+// Player
+//
+function Player(credit) {
+  var self = this;
+  
+  this.credit = credit;
+  
+  this.canBet = function(bet) {
+    return( self.credit >= bet );
+  }
+  this.doBet = function(bet) {
+    self.credit -= bet;
+  }
+  this.pay = function(pay) {
+    self.credit += pay;
+  }
+}
+
+//
+// Card
+//
+function Card(id) {
+  var self = this;
+  
+  this.id     = id;
+  this.suit   = Math.floor(self.id / 13);
+  this.number = Math.floor(self.id % 13) + 1;
+  this.down   = false;
+  
+  this.flip = function() {
+    self.down = !self.down;
+  }
+}
+
+//
+// Utils
+//
+function rand(x) {
+  return( Math.floor( Math.random() * x ) );
+}
+
+function getHTMLElement(id) {
+  return( document.getElementById(id) );
+}
+
+//
+// Instance Game
+//
+var game = new Game()
+
+</script>
+
+</body>
+
+</html>

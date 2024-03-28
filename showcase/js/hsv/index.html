@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>HSV</title>
+
+  <style>
+    body {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 50vh;
+      margin: 0;
+      user-select: none;
+    }
+    #container {
+      text-align: center;
+    }
+  </style>
+  
+  <script>
+    var srcs = ["beso_klint.png", "espalda_klint.png"], index = 0;
+    var canvasImage, canvasHsv, contextImage, contextHsv;
+    var image, imageOriginal, imageHsv;
+    
+  function onLoad(){
+    canvasImage = document.getElementById("canvasImage");
+    canvasHsv = document.getElementById("canvasHsv");
+    contextImage = canvasImage.getContext("2d");
+    contextHsv = canvasHsv.getContext("2d");
+      
+    image = new Image();
+    tick();
+  };
+  
+  function tick(){
+    image.src = "img/" + srcs[index];
+    index = (index + 1) % srcs.length;
+    
+    image.onload = function(){
+      contextImage.drawImage(image, 0, 0);
+      
+      imageOriginal = contextImage.getImageData(0, 0, image.width, image.height);
+      imageHsv = contextHsv.getImageData(0, 0, image.width, image.height);
+      
+      convertHsv(imageOriginal, imageHsv);
+      
+      contextHsv.putImageData(imageHsv, 0, 0);
+      
+      setTimeout(tick, 5000);
+    };
+  };
+  
+  function convertHsv(imageSrc, imageDst){
+     var src = imageSrc.data, dst = imageDst.data, len = src.length,
+         i = 0, color;
+
+    while(i !== len){
+      color = rgb2hsv(src[i] / 255, src[i + 1] / 255, src[i + 2] / 255);
+      
+      dst[i ++] = (color.h / 360) * 255;
+      dst[i ++] = color.s * 255;
+      dst[i ++] = color.v * 255;
+      dst[i ++] = 255;
+    }
+    
+    return dst;
+  };
+
+  function rgb2hsv(r, g, b){
+    var v = Math.max(r, g, b),
+        delta = v - Math.min(r, g, b),
+        s = v === 0? 0: delta / v,
+        h = 0;
+    
+    if (0 !== delta){
+    
+      if (v === r){
+        h = 60 * (g - b) / delta;
+      }else if (v === g){
+        h = 120 + (60 * (b - r) / delta);
+      }else{
+        h = 240 + (60 * (r - g) / delta);
+      }
+      
+      if (h < 0){
+        h += 360;
+      }
+    }
+    
+    return {h: h, s: s, v: v};
+  }
+  
+  </script>
+</head>
+
+<body onload="onLoad();">
+
+  <div id="container">
+    <div>
+      <canvas id="canvasImage" width="224px" height="224px" style="border:1px solid #000000;"></canvas>
+      <canvas id="canvasHsv" width="224px" height="224px" style="border:1px solid #000000;"></canvas>
+    </div>
+  </div>
+
+</body>
+
+</html>

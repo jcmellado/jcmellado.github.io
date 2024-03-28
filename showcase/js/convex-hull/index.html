@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Convex Hull - Melkmann Algorithm</title>
+  
+  <style>
+    body {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 50vh;
+      margin: 0;
+      user-select: none;
+    }
+
+    #container {
+      text-align: center;
+    }
+  </style>
+  
+  <script>
+    var reset, canvas, context, points = [], hull = [], current;
+  
+    function onLoad(){
+      reset = document.getElementById("reset");
+      canvas = document.getElementById("canvas");
+      context = canvas.getContext("2d");
+
+      reset.addEventListener("click", onReset, false);
+      canvas.addEventListener("click", onClick, false);
+      canvas.addEventListener("mousemove", onMouseMove, false);
+      canvas.addEventListener("mouseout", onMouseOut, false);
+      
+      drawInitialText();
+    };
+    
+    function onReset(event){
+      points = [];
+      hull = [];
+      current = null;
+      clearCanvas();
+      drawInitialText();
+    };
+    
+    function onClick(event){
+      var point = event2point(event);
+      if ( isValidPoint(point) ){
+        points.push(point);
+        hull = convexHull();
+        draw();
+      }
+    };
+
+    function onMouseMove(event){
+      if (points.length !== 0) {
+        current = event2point(event);
+        draw();
+      }
+    };
+
+    function onMouseOut(event){
+      if (points.length !== 0) {
+        current = null;
+        draw();
+      }
+    };
+
+    function event2point(event){
+      return {x: event.clientX - canvas.offsetLeft,
+              y: event.clientY - canvas.offsetTop};
+    };
+    
+    function isValidPoint(point){
+      return !existPoint(point) && (intersectLine(point).length == 0);
+    };
+
+    function existPoint(point){
+      for (var i = 0; i < points.length; ++ i){
+        if (points[i].x === point.x && points[i].y === point.y){
+          return true;
+        }
+      }
+      return false;
+    };
+
+    function intersectLine(point){
+      var inters = [];
+    
+      for (var i = 0; i < points.length - 2; ++ i){
+        var inter = intersection(points[i], points[i + 1], points[points.length - 1], point);
+        if (null != inter){
+          inters.push(inter);
+        }
+      }
+      
+      return inters;
+    };
+
+    function intersection(p1, p2, p3, p4){
+      var d = ( (p4.y - p3.y) * (p2.x - p1.x) ) - ( (p4.x - p3.x) * (p2.y - p1.y) );
+      if (0 == d){
+        return null;
+      }
+      
+      var a = ( ( (p4.x - p3.x) * (p1.y - p3.y) ) - ( (p4.y - p3.y) * (p1.x - p3.x) ) ) / d;
+      var b = ( ( (p2.x - p1.x) * (p1.y - p3.y) ) - ( (p2.y - p1.y) * (p1.x - p3.x) ) ) / d;
+        
+      if (a < 0 || a > 1 || b < 0 || b > 1){
+        return null;
+      }
+
+      return { x: p1.x + a * (p2.x - p1.x), y: p1.y + a * (p2.y - p1.y) };
+    };
+
+    function convexHull(){
+      var deque = [];
+
+      if (points.length >= 3){
+
+        if ( position(points[0], points[1], points[2]) > 0){
+          deque.push(points[0]);
+          deque.push(points[1]);
+        }else{
+          deque.push(points[1]);
+          deque.push(points[0]);
+        }
+        deque.push(points[2]);
+        deque.unshift(points[2]);
+
+        for (var i = 3; i < points.length; ++ i){
+          var point = points[i];
+
+          if ( position(point, deque[0], deque[1]) < 0 ||
+               position(deque[deque.length - 2], deque[deque.length - 1], point) < 0 ){
+               
+            while( position(deque[deque.length - 2], deque[deque.length - 1], point) <= 0 ){
+              deque.pop();
+            }
+            deque.push(point);
+            
+            while( position(point, deque[0], deque[1]) <= 0 ){
+              deque.shift();
+            }
+            deque.unshift(point);
+          }
+        }
+
+      }
+
+      return deque;
+    };
+
+    function position(p1, p2, p3){
+      return ( (p2.x - p1.x) * (p3.y - p1.y) ) - ( (p3.x - p1.x) * (p2.y - p1.y) );
+    };
+
+    function drawInitialText(){
+      context.font = "24px Arial";
+      context.fillStyle = "black";
+      
+      var metrics = context.measureText("Click me!");
+      var x = ( parseInt(canvas.width) - metrics.width) / 2
+      var y = parseInt(canvas.height) * .35;
+      
+      context.fillText("Click me!", x, y);
+    };
+
+    function draw(){
+      clearCanvas();
+      drawConvexHull();
+      drawPoints();
+      drawCurrent();
+    };
+
+    function clearCanvas(){
+      context.clearRect(0, 0, parseInt(canvas.width), parseInt(canvas.height) );
+    };
+
+    function drawConvexHull(){
+      if (hull.length !== 0){
+        context.fillStyle = "rgba(255,255,0,0.5)";
+        context.beginPath();
+        context.moveTo(hull[0].x, hull[0].y);
+        for (var i = 1; i < hull.length; ++ i){
+          context.lineTo(hull[i].x, hull[i].y);
+        }
+        context.closePath();
+        context.fill();
+      }
+    };
+
+    function drawPoints(){
+      context.beginPath();
+      for (var i = 0; i < points.length; ++ i){
+        var point = points[i];
+        context.strokeStyle = "black";
+        context.strokeRect(point.x - 2, point.y - 2, 4, 4);
+
+        context.strokeStyle = "blue";
+        context.moveTo(point.x, point.y);
+        if (i != points.length - 1){
+          context.lineTo(points[i + 1].x, points[i + 1].y);
+        }
+      }
+      context.stroke();
+      context.closePath();
+    };
+    
+    function drawCurrent(){
+      if (current && (points.length !== 0) ){
+        var inters = intersectLine(current);
+        
+        context.beginPath();
+        
+        context.strokeStyle = (inters.length !== 0)? "magenta": "green";
+        context.moveTo(current.x, current.y);
+        context.lineTo(points[points.length - 1].x, points[points.length - 1].y);
+        context.stroke();
+        
+        for (var i = 0; i < inters.length; ++ i){
+          context.strokeStyle = "red";
+          context.strokeRect(inters[i].x - 2, inters[i].y - 2, 4, 4);
+        }
+
+        context.closePath();
+      }
+    };
+    
+  </script>
+</head>
+
+<body onload="onLoad();">
+  <div id="container">
+    <div>
+      <canvas id="canvas" width="420px" height="320px"
+        style="border: 1px solid #000; background-color: silver; cursor: pointer;"></canvas>
+    </div>
+    <div>
+      <button id="reset" type="button">Reset</button>
+    </div>
+  </div>
+</body>
+
+</html>

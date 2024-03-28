@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Convexity Defects</title>
+
+    <style>
+      body {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 100vh;
+        margin: 0;
+        user-select: none;
+      }
+      #container {
+        text-align: center;
+      }
+      canvas {
+        width: 500px;
+        height: 500px;
+      }
+  </style>
+  
+  <script>
+    var canvas, context, points = [], hull = [], defects = [], stars = [];
+  
+    function onLoad(){
+      canvas = document.getElementById("canvas");
+      context = canvas.getContext("2d");
+
+      tick();
+    };
+    
+    function tick(){
+      stars = randomStars();
+      points = randomPoints();
+      hull = convexHull()
+      defects = convexityDefects();
+      
+      draw();
+      
+      setTimeout(tick, 5000);
+    };
+
+    function randomStars(){
+      var points = [],
+          w = parseInt(canvas.width), h = parseInt(canvas.height),
+          len = 200, i = 0;
+    
+      for (; i !== len; ++ i){
+        points.push( { x: random(w), y: random(h) } );
+      }
+    
+      return points;
+    };
+
+    function randomPoints(){
+      var points = [],
+          xc = parseInt(canvas.width) / 2, yc = parseInt(canvas.height) / 2,
+          len = Math.max(10, random(25) ), alpha = 0, inc = 2 * Math.PI / len, i = 0, old, dif;
+    
+      for (; i !== len; ++ i, alpha += inc){
+        radius = Math.max( random( Math.min(xc, yc) - 25), 25);
+        
+        if (old){
+          radius += Math.abs(old - radius) < 25? 25: 0;
+        }
+        old = radius;
+      
+        points.push( { x: Math.floor( xc + radius * Math.cos(alpha) ),
+                       y: Math.floor( yc - radius * Math.sin(alpha) ) } );
+      }
+    
+      return points;
+    };
+
+    function convexHull(){
+      var deque = [];
+
+      if (points.length >= 3){
+
+        if ( position(points[0], points[1], points[2]) > 0){
+          deque.push(points[0]);
+          deque.push(points[1]);
+        }else{
+          deque.push(points[1]);
+          deque.push(points[0]);
+        }
+        deque.push(points[2]);
+        deque.unshift(points[2]);
+
+        for (var i = 3; i < points.length; ++ i){
+          var point = points[i];
+
+          if ( position(point, deque[0], deque[1]) < 0 ||
+               position(deque[deque.length - 2], deque[deque.length - 1], point) < 0 ){
+               
+            while( position(deque[deque.length - 2], deque[deque.length - 1], point) <= 0 ){
+              deque.pop();
+            }
+            deque.push(point);
+            
+            while( position(point, deque[0], deque[1]) <= 0 ){
+              deque.shift();
+            }
+            deque.unshift(point);
+          }
+        }
+      }
+
+      return deque;
+    };
+
+    function position(p1, p2, p3){
+      return ( (p2.x - p1.x) * (p3.y - p1.y) ) - ( (p3.x - p1.x) * (p2.y - p1.y) );
+    };
+
+    function convexityDefects(){
+      var defects = [], len = hull.length,
+          curr, next, point, dx0, dy0, scale, defect, isDefect,
+          idx1, idx2, idx3, sign, inc, i, j;
+      
+      if (len >= 3){
+        idx1 = indexPoint(hull[0]);
+        idx2 = indexPoint(hull[1]);
+        idx3 = indexPoint(hull[2]);
+        
+        sign = 0;
+        sign += idx2 > idx1? 1: 0;
+        sign += idx3 > idx2? 1: 0;
+        sign += idx1 > idx3? 1: 0;
+        
+        inc = (sign === 2)? 1: -1;
+        
+        j = idx1;
+        curr = hull[0];
+        
+        for (i = 1; i !== len; ++ i){
+          next = hull[i];
+          isDefect = false;
+          depth = 0;
+        
+          dx0 = next.x - curr.x;
+          dy0 = next.y - curr.y;
+          scale = 1 / Math.sqrt(dx0 * dx0 + dy0 * dy0);
+        
+          defect = {start: curr, end: next};
+
+          while(true){
+            j += inc;
+            j = (j < 0)? points.length - 1: j % points.length;
+            
+            point = points[j];
+            
+            if (point.x == next.x && point.y == next.y){
+              break;
+            }
+
+            dx = point.x - curr.x;
+            dy = point.y - curr.y;
+            dist = Math.abs(-dy0 * dx + dx0 * dy) * scale;
+          
+            if (dist > depth){
+              isDefect = true;
+              
+              defect.depth = depth = dist;
+              defect.depthPoint = point;
+            }
+          }
+          
+          if (isDefect){
+            defects.push(defect);
+          }
+          
+          curr = next;
+        }
+      }
+      
+      return defects;
+    }
+
+    function indexPoint(point){
+      var i = points.length;
+      while(i --){
+        if (points[i].x == point.x && points[i].y == point.y){
+          break;
+        }
+      }
+      return i;
+    };
+
+    function random(limit){
+      return Math.min( Math.floor( Math.random() * limit ), limit - 1);
+    };
+
+    function draw(){
+      clearCanvas();
+      drawConvexHull();
+      drawStars();
+      drawPoints();
+      drawConvexityDefects();
+    };
+
+    function clearCanvas(){
+      context.clearRect(0, 0, parseInt(canvas.width), parseInt(canvas.height) );
+    };
+
+    function drawConvexHull(){
+      if (hull.length !== 0){
+        context.beginPath();
+        context.fillStyle = "#003366";
+        context.moveTo(hull[0].x, hull[0].y);
+        for (var i = 1; i < hull.length; ++ i){
+          context.lineTo(hull[i].x, hull[i].y);
+        }
+        context.fill();
+        context.closePath();
+        
+        context.beginPath();
+        context.strokeStyle = "#FFFFFF";
+        for (i = 0; i < hull.length; ++ i){
+          context.moveTo(hull[i].x, hull[i].y);
+          context.arc(hull[i].x, hull[i].y, 5, 0, 2 * Math.PI, false);
+        }
+        context.stroke();
+        context.closePath();
+      }
+    };
+
+    function drawStars(){
+      context.beginPath();
+      for (var i = 0; i < stars.length; ++ i){
+        var point = stars[i];
+        var color = random(15);
+        context.strokeStyle = color === 0? "#FFFF00": color === 1? "#FFFFFF": "#A0A0A0";
+        context.strokeRect(point.x, point.y, 1, 1);
+      }
+      context.stroke();
+      context.closePath();
+    };
+    
+    function drawPoints(){
+      context.beginPath();
+      context.fillStyle = "#FFFFFF";
+      context.strokeStyle = "#6699CC";
+      for (var i = 0; i < points.length; ++ i){
+        var point = points[i];
+        context.moveTo(point.x, point.y);
+        context.arc(point.x, point.y, 3, 0, 2 * Math.PI, false);
+        context.moveTo(point.x, point.y);
+        if (i != points.length - 1){
+          context.lineTo(points[i + 1].x, points[i + 1].y);
+        }
+      }
+      context.lineTo(points[0].x, points[0].y);
+      context.stroke();
+      context.fill();
+      context.closePath();
+    };
+    
+    function drawConvexityDefects(){
+      context.beginPath();
+      context.fillStyle = "#FFFF00";
+      for (var i = 0; i < defects.length; ++ i){
+        var defect = defects[i];
+        context.moveTo(defect.depthPoint.x, defect.depthPoint.y);
+        context.arc(defect.depthPoint.x, defect.depthPoint.y, 3, 0, 2 * Math.PI, false);
+      }
+      context.fill();
+      context.closePath();
+      
+      context.beginPath();
+      context.strokeStyle = "#FFFFFF";
+      for (var i = 0; i < defects.length; ++ i){
+        var defect = defects[i];
+        context.moveTo(defect.depthPoint.x, defect.depthPoint.y);
+        context.arc(defect.depthPoint.x, defect.depthPoint.y, 5, 0, 2 * Math.PI, false);
+      }
+      context.stroke();
+      context.closePath();
+    };
+  </script>
+</head>
+
+<body onload="onLoad();">
+  <div id="container">
+    <div>
+      <canvas id="canvas" width="320px" height="320px"
+        style="border: 1px solid #000; background-color: #000044;"></canvas>
+    </div>
+  <div>
+</body>
+
+</html>

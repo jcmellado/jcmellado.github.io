@@ -1,0 +1,115 @@
+body{
+  margin: 0;
+  padding: 0;
+  font-family: Arial;
+  font-size: 12px;
+  text-align: center;
+  color: #ffffff;
+  background: #000000;
+  user-select: none;
+}
+
+.div-container{
+  margin: 50px auto;
+  text-align: left;
+}
+
+.div-play{
+  position: relative;
+  margin: 0 auto;
+  top: -250px;
+  left: -15px;
+  z-Index: 1;
+  width: 128px;
+  height: 50px;
+  background-image: url(img/play.gif);
+  background-repeat: no-repeat;
+}
+
+.div-highscore{
+  position: relative;
+  margin: 0 auto;
+  top: -80px;
+  left: -15px;
+  z-Index: 1;
+  text-align: center;
+  font-family: sans-serif;
+  font-size: 12px;
+  font-weight: bold;
+}
+
+.div-gameover{
+  position: relative;
+  margin: 0 auto;
+  top: -250px;
+  left: -15px;
+  z-Index: 1;
+  width: 145px;
+  height: 50px;
+  background-image: url(img/gameover.gif);
+  background-repeat: no-repeat;
+}
+
+.div-board{
+  overflow: hidden;
+  margin: 0 auto;
+  width: 264px;
+  height: 400px;
+  background-image: url(img/board.gif);
+  background-repeat: no-repeat;
+}
+
+.div-score{
+  position: relative;
+  left: 34px;
+  height: 58px;
+  font-family: sans-serif;
+  font-size: 20px;
+  font-weight: bold;
+  text-align: center;
+}
+
+.div-digit{
+  position: relative;
+  float: left;
+  padding-top: 10px;
+  width: 21px;
+  height: 20px;
+  color: #ffffff;
+  background: transparent;
+}
+
+.div-grid{
+  position: relative;
+  overflow: hidden;
+  left: 12px;
+  width: 210px;
+  height: 330px;
+}
+
+.div-sandclock{
+  position:relative;
+  top: -316px;
+  left: 246px;
+  width: 12px;
+  height: 300px;
+}
+
+.div-sand{
+  position: absolute;
+  overflow: hidden;
+  color: #000000;
+  background: #FFFF00;
+}
+
+.div-grain{
+  position: absolute;
+  overflow: hidden;
+  color: #000000;
+  background: #FFFF00;
+}
+
+.div-sprite{
+  position: absolute;
+  overflow: hidden;
+}

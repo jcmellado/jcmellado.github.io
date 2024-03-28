@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>dart-solitaire</title>
+
+    <link rel="stylesheet" href="css/solitaire.css">
+  </head>
+
+  <body>
+    <div id="container" class="container unselectable">
+      <canvas id="canvas" class="canvas" draggable="true"></canvas>
+      <div class="menu">
+        <div class="options">
+          <div id="undo" class="option undo" title="Undo"></div>
+          <div id="restart" class="option restart" title="Restart"></div>
+          <div id="new" class="option new" title="New"></div>
+          <div id="settings" class="option settings" title="Settings"></div>
+        </div>
+      </div>
+    </div>
+
+    <div id="overlay-msgbox" class="overlay unselectable">
+      <div class="modal">
+        <div class="modal-header">
+          <button class="close">&times;</button>
+          <p>Solitaire</p>
+        </div>
+        <div class="modal-content">
+          <p id="message-msgbox"></p>
+        </div>
+        <div class="modal-footer">
+        </div>
+      </div>
+    </div>
+
+    <div id="overlay-settings" class="overlay unselectable">
+      <div class="modal">
+        <div class="modal-header">
+          <button class="close">&times;</button>
+          <p>Solitaire</p>
+        </div>
+        <div class="modal-content">
+          <p><label>Cards to Draw: <select id="draw-settings"></select></label></p><br>
+          <p><label>Background Design: <select id="background-settings"></select></label></p><br>
+          <p><label>Front Card Design: <select id="front-settings"></select></label></p><br>
+        </div>
+        <div class="modal-footer">
+        </div>
+      </div>
+    </div>
+
+    <div id="overlay-gameover" class="gameover unselectable">
+    </div>
+
+    <script src="js/solitaire.dart.js"></script>
+  </body>
+</html>

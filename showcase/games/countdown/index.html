@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Countdown</title>
+  
+  <style>
+    body {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      margin: 0;
+      user-select: none;
+    }
+    #container {
+      display: flex;
+      justify-content: space-between;
+      text-align: center;
+    }
+  </style>
+  
+  <script src="js/ruffle.js"></script>
+  <script>
+    window.RufflePlayer = window.RufflePlayer || {};
+    window.RufflePlayer.config = {
+      'autoplay': 'on',
+      'contextMenu': 'off',
+      'unmuteOverlay': 'hidden',
+      'splashScreen': false,
+      'quality': 'best'
+    };
+
+    window.addEventListener('load', (event) => {
+      const ruffle = window.RufflePlayer.newest();
+      const player = ruffle.createPlayer();
+ 
+      const container = document.getElementById('container');
+      container.appendChild(player);
+      
+      player.load('countdown_v1.0.0_512x384.swf');
+    });
+</script>
+</head>
+
+<body>
+  <div id="container"></div>
+</body>
+
+</html>

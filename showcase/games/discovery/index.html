@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Discovery</title>
+
+<style>
+
+body {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 10vh;
+  margin: 0;
+  user-select: none;
+}
+
+#container {
+  text-align: center;
+  position: relative;
+  left: -280px;
+}
+
+body {
+  font-family: Arial;
+  font-size: 12px;
+  font-weight: bold;
+  color: #FFFFFF;
+  background: #3689B1;
+}
+
+a {
+  color: #00FFFF;
+}
+
+.div-restart {
+  position: absolute;
+  left: 10px;
+  top: 10px;
+  width: 560px;
+  text-align: center;
+}
+
+.div-board {
+  position: absolute;
+  left: 10px;
+  top: 35px;
+  width: 560px;
+}
+
+.cell {
+  position: absolute;
+  overflow: hidden;
+  color: #000000;
+  background: #FFFFFF;
+  border: 1px solid #000000;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<div id="container">
+  <div id="div-restart" class="div-restart">
+    <a href="javascript: window.location.reload(true)">Restart</a>
+  </div>
+  <div id="div-board" class="div-board">
+  </div>
+</div>
+
+<script type="text/javascript">
+
+//
+// Game
+//
+function Game() {
+  this.board = new Board();
+
+  this.run = function() {
+    this.board.start();
+  }
+}
+
+//
+// Board
+//
+function Board() {
+  var self = this;
+
+  this.div   = document.getElementById("div-board");
+  this.grid  = new Grid();
+  this.cells = new Array();
+
+  this.cellReverse   = null;
+  this.cellsSelected = new Array();
+  this.cellsToGroup  = new Array();
+  this.cellsRemoved  = 0;
+  
+  this.removing  = false;
+  this.countdown = 0;
+
+  this.start = function() {
+    self.createCells();
+    self.registerMouse();
+  }
+
+//
+// Cells
+//
+  this.createCells = function() {
+    for (var row = 0; row != self.grid.cellRows; ++ row) {
+      self.cells[row] = new Array(self.grid.cellCols);
+      for (var col = 0; col != self.grid.cellCols; ++ col)
+        self.createCell(row, col);
+    }
+  }
+  
+  this.createCell = function(row, col) {
+    var div   = self.createDivCell(row, col);
+    var color = self.grid.generateColor();
+
+    self.cells[row][col] = new Cell(div, row, col, color);
+    div.cell = self.cells[row][col];
+
+    self.div.appendChild(div);
+  }
+  
+  this.createDivCell = function(row, col) {
+    var idCell = (row * self.grid.cellRows) + col;
+
+    var id         = self.grid.cellClassName + String(idCell);
+    var className  = self.grid.cellClassName;
+    var left       = self.grid.getLeft(col);
+    var top        = self.grid.getTop(row);
+    var width      = self.grid.cellWidth;
+    var height     = self.grid.cellHeight;
+    var background = self.grid.cellBackground;
+
+    return( createDiv(id, className, left, top, width, height, background) );
+  }
+
+//
+// Mouse
+//
+  this.registerMouse = function() {
+    document.onmousemove = self.onMouseMove;
+    document.onclick     = self.onClick;
+  }
+
+  this.onMouseMove = function(e) {
+    if (self.removing == true)
+      return;
+      
+    self.flipPrevious();
+    self.flipNew(e);
+  }
+
+  this.flipPrevious = function() {
+    if (self.cellReverse != null) {
+      self.cellReverse.flip(self.grid.cellBackground);
+      self.cellReverse = null;
+    }
+  }
+
+  this.flipNew = function(e) {
+    var div = getMouseObject(e);
+    if ( self.isCell(div) )
+      if (div.cell.selected == false) {
+        self.cellReverse = div.cell;
+        self.cellReverse.flip(self.cellReverse.color);
+      }
+  }
+
+  this.onClick = function(e) {
+    if (self.removing == true)
+      return;
+
+    var div = getMouseObject(e);
+    if ( self.isCell(div) )
+      self.onClickCell(div.cell);
+  }
+  
+  this.onClickCell = function(cell) {
+    if (cell.selected)
+      self.unselectCell(cell);
+    else
+      if ( self.selectCell(cell) )
+        if ( self.removeGroup() )
+          if ( self.isEnd() )
+            alert("Congratulations!!! You have removed all the squares from the board.");
+  }
+
+//
+// Select/Unselect
+//  
+  this.selectCell = function(cell) {
+    if ( self.canSelect(cell) == false)
+      return(false);
+
+    cell.selected    = true;
+    self.cellReverse = null;
+
+    self.cellsSelected.push(cell);
+    self.cellsToGroup = removeFromArray(self.cellsToGroup, cell);
+    self.cellsToGroup = mergeArrays(self.cellsToGroup, self.getNeighbours(cell, false) );
+
+    return(true);
+  }
+  
+  this.unselectCell = function(cell) {
+    if ( self.canUnselect(cell) == false)
+      return(false);
+
+    cell.selected    = false;
+    self.cellReverse = cell;
+
+    self.cellsSelected = removeFromArray(self.cellsSelected, cell);
+    if (self.cellsSelected.length == 0)
+      self.cellsToGroup.length = 0;
+    else
+      self.cellsToGroup.push(cell);
+
+    return(true);
+  }
+
+  this.removeGroup = function() {
+    if ( self.canRemoveGroup() == false)
+      return(false);
+
+    self.removing  = true;
+    self.countdown = 7;
+    self.activateTimer();
+  }
+
+  this.activateTimer = function() {
+    setTimeout(self.onTimer, 100);
+  }
+      
+  this.onTimer = function() {
+    for (var i in self.cellsSelected) {
+      var div = self.cellsSelected[i].div;
+      div.style.left   = String( pxToNumber(div.style.left)   + self.grid.cellRemoveStep) + "px";
+      div.style.top    = String( pxToNumber(div.style.top)    + self.grid.cellRemoveStep) + "px";
+      div.style.width  = String( pxToNumber(div.style.width)  - (2 * self.grid.cellRemoveStep) ) + "px";
+      div.style.height = String( pxToNumber(div.style.height) - (2 * self.grid.cellRemoveStep) ) + "px";
+    }
+    
+    self.removing = (-- self.countdown > 0);
+    
+    if (self.removing == true)
+      self.activateTimer();
+    else
+      self.finishTimer();
+  }
+  
+  this.finishTimer = function() {
+    self.removeSelected();
+    self.dropCells();
+
+    self.cellsRemoved += self.cellsSelected.length;
+    self.cellsSelected.length = 0;
+    self.cellsToGroup.length  = 0;
+
+    return(true);
+  }
+
+  this.removeSelected = function() {
+    for (var i in self.cellsSelected) {
+      var cell = self.cellsSelected[i];
+      self.div.removeChild(cell.div);
+      self.cells[cell.row][cell.col] = null;
+    }
+  }
+
+  this.dropCells = function() {
+    for (var col = 0; col != self.grid.cellCols; ++ col)
+      for (var row = self.grid.cellRows - 1; row > 0; -- row)
+        if (self.cells[row][col] == null)
+          self.dropColumn(row, col);
+  }
+  
+  this.dropColumn = function(row, col) {
+    for (var y = row - 1; y >= 0; -- y)
+      if (self.cells[y][col] != null) {
+        self.cells[row][col] = self.cells[y][col];
+        self.cells[y][col]   = null;
+        
+        self.cells[row][col].row = row;
+        self.cells[row][col].col = col;
+        self.cells[row][col].drop( self.grid.getLeft(col), self.grid.getTop(row) );
+        break;
+      }
+  }
+
+//
+// Checks
+//
+  this.isCell = function(div) {
+    return(div.className == self.grid.cellClassName);
+  }
+
+  this.canSelect = function(cell) {
+    if (self.cellsSelected.length == 0)
+      return(true);
+
+    return( self.countNeighbours(cell, true) >= 1 );
+  }
+
+  this.canUnselect = function(cell) {
+    var neighbours = this.getNeighbours(cell, true);
+
+    if (neighbours.length <= 1)
+      return(true);
+
+    if (neighbours.length >= 3)
+      return(false);
+
+    var region = self.cellsSelected.slice();
+    var origin = neighbours[0];
+    var target = neighbours[1];
+
+    removeFromArray(region, cell);
+
+    return( self.findPath(region, origin.row, origin.col, target) == true );
+  }
+
+  this.findPath = function(region, row, col, target) {
+    if ( self.isValidCell(row, col) == false)
+      return(false);
+
+    if (self.cells[row][col] == target)
+      return(true);
+
+    if ( findOnArray(region, self.cells[row][col]) == null)
+      return(false);
+
+    removeFromArray(region, self.cells[row][col]);
+
+    return( self.findPath(region, row - 1, col    , target) ||
+            self.findPath(region, row    , col - 1, target) ||
+            self.findPath(region, row    , col + 1, target) ||
+            self.findPath(region, row + 1, col    , target) );
+  }
+
+  this.canRemoveGroup = function() {
+    if (self.cellsSelected.length == 1)
+      return(false);
+
+    return(self.cellsToGroup.length == 0);
+  }
+
+  this.countNeighbours = function(cell, selected) {
+    return( self.getNeighbours(cell, selected).length );
+  }
+
+  this.getNeighbours = function(cell, selected) {
+    var neighbours = new Array();
+
+    neighbours = self.getNeighbour(neighbours, cell, -1,  0, selected);
+    neighbours = self.getNeighbour(neighbours, cell,  0, -1, selected);
+    neighbours = self.getNeighbour(neighbours, cell,  0,  1, selected);
+    neighbours = self.getNeighbour(neighbours, cell,  1,  0, selected);
+
+    return(neighbours);
+  }
+
+  this.getNeighbour = function(neighbours, cell, deltaRow, deltaCol, selected) {
+    var row = cell.row + deltaRow;
+    var col = cell.col + deltaCol;
+
+    if ( self.isNeighbour(row, col, cell.color, selected) )
+      neighbours.push(self.cells[row][col]);
+
+    return(neighbours);
+  }
+
+  this.isNeighbour = function(row, col, color, selected) {
+    if ( self.isValidCell(row, col) == false)
+      return(false);
+
+    if (self.cells[row][col].color != color) 
+      return(false);
+
+    return(self.cells[row][col].selected == selected);
+  }
+
+  this.isValidCell = function(row, col) {
+    if ( self.isValidPosition(row, col) == false)
+      return(false);
+  
+    return(self.cells[row][col] != null)
+  }
+  
+  this.isValidPosition = function(row, col) {
+    return( (row >= 0) && (row < self.grid.cellRows) && 
+            (col >= 0) && (col < self.grid.cellCols) );
+  }
+
+  this.isEnd = function() {
+    return( self.cellsRemoved == (self.grid.cellRows * self.grid.cellCols) );
+  }
+}
+
+//
+// Cell
+//
+function Cell(div, row, col, color) {
+  this.div      = div;
+  this.row      = row;
+  this.col      = col;
+  this.color    = color;
+  this.selected = false;
+
+  this.flip = function(background) {
+    this.div.style.background = background;
+  }
+
+  this.drop = function(left, top) {
+    this.div.style.left = String(left) + "px";
+    this.div.style.top  = String(top)  + "px";
+  }
+}
+
+//
+// Grid
+//
+function Grid() {
+  this.cellRows      = 10;
+  this.cellCols      = 10;
+  this.cellWidth     = 35;
+  this.cellHeight    = 35;
+  this.cellClassName = "cell";
+
+  this.cellBackground = "#FFFFFF";
+  this.cellColors     = new Array("#FFFF00", "#00FF00", "#00FFFF");
+
+  this.cellRemoveStep = 2;
+
+  this.marginLeft = 105;
+  this.marginTop  = 0;
+
+  this.generateColor = function() {
+    return( this.cellColors[ rand(this.cellColors.length) ] );
+  }
+
+  this.getLeft = function(col) {
+    return( this.marginLeft + (col * (this.cellWidth + 1) ) );
+  }
+
+  this.getTop = function(row) {
+    return( this.marginTop + (row * (this.cellHeight + 1) ) );
+  }
+}
+
+//
+// Utils
+//
+function getMouseObject(e) {
+  return(e? e.target: window.event.srcElement);
+}
+
+function rand(x) {
+  return( Math.floor( Math.random() * x ) );
+}
+
+function createDiv(id, className, left, top, width, height, background) {
+  var div = document.createElement("div");
+
+  div.id               = id;
+  div.className        = className;
+  div.style.left       = String(left)   + "px";
+  div.style.top        = String(top)    + "px";
+  div.style.width      = String(width)  + "px";
+  div.style.height     = String(height) + "px";
+  div.style.background = background;
+
+  return(div);
+}
+
+function pxToNumber(s) {
+  return( Number( s.substring(0, s.length - 2) ) );
+}
+
+function findOnArray(array, element) {
+  for (var i in array)
+    if (array[i] == element)
+      return(i);
+  return(null);
+}
+
+function removeFromArray(array, element) {
+  var position = findOnArray(array, element);
+  if (position != null)
+    array.splice(position, 1);
+  return(array);
+}
+
+function mergeArrays(array1, array2) {
+  for (var i in array2)
+    if ( findOnArray(array1, array2[i]) == null)
+      array1.push(array2[i]);
+  return(array1);
+}
+
+//
+// Instance and start Game
+//
+var game = new Game;
+game.run();
+
+</script>
+
+</body>
+
+</html>

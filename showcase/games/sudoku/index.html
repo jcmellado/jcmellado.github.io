@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sudoku</title>
+
+<style>
+
+body {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 10vh;
+  margin: 0;
+  user-select: none;
+}
+
+#container {
+  text-align: center;
+  position: relative;
+  left: -150px;
+}
+
+body {
+  font-family: Arial;
+  font-size: 12px;
+  font-weight: bold;
+  color: #000000;
+  background: #EFEFEF;
+}
+
+a {
+  color: #FF0000;
+}
+
+.div-restart {
+  left: 10px;
+  top: 10px;
+  margin-bottom: 15px;
+  text-align: center;
+}
+
+.div-board {
+  position: absolute;
+  left: 10px;
+  top: 50px;
+}
+
+.table-main {
+  border: 1px solid #000000;
+  color: #000000;
+  background: #FFFFFF;
+}
+
+.table-region {
+  border: 1px solid #000000;
+}
+
+.table-region td {
+  border: 1px solid #CFCFCF;
+}
+
+.cell, .cell-disable {
+  height: 25px;
+  width: 25px;
+  font-family: Arial;
+  font-size: 16px;
+  font-weight: bold;
+  text-align: center;
+  border: 0;
+}
+
+.cell-disable {
+  color: #0000FF;
+}
+
+.bn-validate {
+  margin-top: 15px;
+  font-family: Arial;
+  font-size: 14px;
+  font-weight: bold;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<div id="container">
+<div id="div-board" class="div-board">
+
+<div id="div-restart" class="div-restart">
+<a href="javascript: window.location.reload(true)">Restart</a>
+</div>
+
+<table id="table0" class="table-main" cellspacing="0" cellpadding="0">
+<tr>
+<td><table id="table1" class="table-region" cellspacing="0" cellpadding="0">
+<tr>
+<td><input id="c0" class="cell" type="text" size="1" maxlength="1"></td>
+<td><input id="c1" class="cell" type="text" size="1" maxlength="1"></td>
+<td><input id="c2" class="cell" type="text" size="1" maxlength="1"></td>
+</tr>
+<tr>
+<td><input id="c9" class="cell" type="text" size="1" maxlength="1"></td>
+<td><input id="c10" class="cell" type="text" size="1" maxlength="1"></td>
+<td><input id="c11" class="cell" type="text" size="1" maxlength="1"></td>
+</tr>
+<tr>
+<td><input id="c18" class="cell" type="text" size="1" maxlength="1"></td>
+<td><input id="c19" class="cell" type="text" size="1" maxlength="1"></td>
+<td><input id="c20" class="cell" type="text" size="1" maxlength="1"></td>
+</tr>
+</table></td>
+<td><table id="table2" class="table-region" cellspacing="0" cellpadding="0">
+<tr>
+<td><input id="c3" class="cell" type="text" size="1" maxlength="1"></td>
+<td><input id="c4" class="cell" type="text" size="1" maxlength="1"></td>
+<td><input id="c5" class="cell" type="text" size="1" maxlength="1"></td>
+</tr>
+<tr>
+<td><input id="c12" class="cell" type="text" size="1" maxlength="1"></td>
+<td><input id="c13" class="cell" type="text" size="1" maxlength="1"></td>
+<td><input id="c14" class="cell" type="text" size="1" maxlength="1"></td>
+</tr>
+<tr>
+<td><input id="c21" class="cell" type="text" size="1" maxlength="1"></td>
+<td><input id="c22" class="cell" type="text" size="1" maxlength="1"></td>
+<td><input id="c23" class="cell" type="text" size="1" maxlength="1"></td>
+</tr>
+</table></td>
+<td><table id="table3" class="table-region" cellspacing="0" cellpadding="0">
+<tr>
+<td><input id="c6" class="cell" type="text" size="1" maxlength="1"></td>
+<td><input id="c7" class="cell" type="text" size="1" maxlength="1"></td>
+<td><input id="c8" class="cell" type="text" size="1" maxlength="1"></td>
+</tr>
+<tr>
+<td><input id="c15" class="cell" type="text" size="1" maxlength="1"></td>
+<td><input id="c16" class="cell" type="text" size="1" maxlength="1"></td>
+<td><input id="c17" class="cell" type="text" size="1" maxlength="1"></td>
+</tr>
+<tr>
+<td><input id="c24" class="cell" type="text" size="1" maxlength="1"></td>
+<td><input id="c25" class="cell" type="text" size="1" maxlength="1"></td>
+<td><input id="c26" class="cell" type="text" size="1" maxlength="1"></td>
+</tr>
+</table></td>
+</tr>
+
+<tr>
+<td><table id="table4" class="table-region" cellspacing="0" cellpadding="0">
+<tr>
+<td><input id="c27" class="cell" type="text" size="1" maxlength="1"></td>
+<td><input id="c28" class="cell" type="text" size="1" maxlength="1"></td>
+<td><input id="c29" class="cell" type="text" size="1" maxlength="1"></td>
+</tr>
+<tr>
+<td><input id="c36" class="cell" type="text" size="1" maxlength="1"></td>
+<td><input id="c37" class="cell" type="text" size="1" maxlength="1"></td>
+<td><input id="c38" class="cell" type="text" size="1" maxlength="1"></td>
+</tr>
+<tr>
+<td><input id="c45" class="cell" type="text" size="1" maxlength="1"></td>
+<td><input id="c46" class="cell" type="text" size="1" maxlength="1"></td>
+<td><input id="c47" class="cell" type="text" size="1" maxlength="1"></td>
+</tr>
+</table></td>
+<td><table id="table5" class="table-region" cellspacing="0" cellpadding="0">
+<tr>
+<td><input id="c30" class="cell" type="text" size="1" maxlength="1"></td>
+<td><input id="c31" class="cell" type="text" size="1" maxlength="1"></td>
+<td><input id="c32" class="cell" type="text" size="1" maxlength="1"></td>
+</tr>
+<tr>
+<td><input id="c39" class="cell" type="text" size="1" maxlength="1"></td>
+<td><input id="c40" class="cell" type="text" size="1" maxlength="1"></td>
+<td><input id="c41" class="cell" type="text" size="1" maxlength="1"></td>
+</tr>
+<tr>
+<td><input id="c48" class="cell" type="text" size="1" maxlength="1"></td>
+<td><input id="c49" class="cell" type="text" size="1" maxlength="1"></td>
+<td><input id="c50" class="cell" type="text" size="1" maxlength="1"></td>
+</tr>
+</table></td>
+<td><table id="table6" class="table-region" cellspacing="0" cellpadding="0">
+<tr>
+<td><input id="c33" class="cell" type="text" size="1" maxlength="1"></td>
+<td><input id="c34" class="cell" type="text" size="1" maxlength="1"></td>
+<td><input id="c35" class="cell" type="text" size="1" maxlength="1"></td>
+</tr>
+<tr>
+<td><input id="c42" class="cell" type="text" size="1" maxlength="1"></td>
+<td><input id="c43" class="cell" type="text" size="1" maxlength="1"></td>
+<td><input id="c44" class="cell" type="text" size="1" maxlength="1"></td>
+</tr>
+<tr>
+<td><input id="c51" class="cell" type="text" size="1" maxlength="1"></td>
+<td><input id="c52" class="cell" type="text" size="1" maxlength="1"></td>
+<td><input id="c53" class="cell" type="text" size="1" maxlength="1"></td>
+</tr>
+</table></td>
+</tr>
+
+<tr>
+<td><table id="table7" class="table-region" cellspacing="0" cellpadding="0">
+<tr>
+<td><input id="c54" class="cell" type="text" size="1" maxlength="1"></td>
+<td><input id="c55" class="cell" type="text" size="1" maxlength="1"></td>
+<td><input id="c56" class="cell" type="text" size="1" maxlength="1"></td>
+</tr>
+<tr>
+<td><input id="c63" class="cell" type="text" size="1" maxlength="1"></td>
+<td><input id="c64" class="cell" type="text" size="1" maxlength="1"></td>
+<td><input id="c65" class="cell" type="text" size="1" maxlength="1"></td>
+</tr>
+<tr>
+<td><input id="c72" class="cell" type="text" size="1" maxlength="1"></td>
+<td><input id="c73" class="cell" type="text" size="1" maxlength="1"></td>
+<td><input id="c74" class="cell" type="text" size="1" maxlength="1"></td>
+</tr>
+</table></td>
+<td><table id="table8" class="table-region" cellspacing="0" cellpadding="0">
+<tr>
+<td><input id="c57" class="cell" type="text" size="1" maxlength="1"></td>
+<td><input id="c58" class="cell" type="text" size="1" maxlength="1"></td>
+<td><input id="c59" class="cell" type="text" size="1" maxlength="1"></td>
+</tr>
+<tr>
+<td><input id="c66" class="cell" type="text" size="1" maxlength="1"></td>
+<td><input id="c67" class="cell" type="text" size="1" maxlength="1"></td>
+<td><input id="c68" class="cell" type="text" size="1" maxlength="1"></td>
+</tr>
+<tr>
+<td><input id="c75" class="cell" type="text" size="1" maxlength="1"></td>
+<td><input id="c76" class="cell" type="text" size="1" maxlength="1"></td>
+<td><input id="c77" class="cell" type="text" size="1" maxlength="1"></td>
+</tr>
+</table></td>
+<td><table id="table9" class="table-region" cellspacing="0" cellpadding="0">
+<tr>
+<td><input id="c60" class="cell" type="text" size="1" maxlength="1"></td>
+<td><input id="c61" class="cell" type="text" size="1" maxlength="1"></td>
+<td><input id="c62" class="cell" type="text" size="1" maxlength="1"></td>
+</tr>
+<tr>
+<td><input id="c69" class="cell" type="text" size="1" maxlength="1"></td>
+<td><input id="c70" class="cell" type="text" size="1" maxlength="1"></td>
+<td><input id="c71" class="cell" type="text" size="1" maxlength="1"></td>
+</tr>
+<tr>
+<td><input id="c78" class="cell" type="text" size="1" maxlength="1"></td>
+<td><input id="c79" class="cell" type="text" size="1" maxlength="1"></td>
+<td><input id="c80" class="cell" type="text" size="1" maxlength="1"></td>
+</tr>
+</table></td>
+</tr>
+
+</table>
+
+<input id="bn-validate" type="button" class="bn-validate" onClick="game.validate()" value="Validate!" name="bn-validate"/>
+
+</div>
+</div>
+
+<script type="text/javascript">
+
+//
+// Game
+//
+function Game() {
+  this.board = new Board();
+
+  this.run = function() {
+    this.board.start();
+  }
+  
+  this.validate = function() {
+    this.board.validate();
+  }
+}
+
+//
+// Board
+//
+function Board() {
+  this.grid   = new Grid();
+  this.sudoku = new Array();
+
+  this.start = function() {
+    this.generateSudoku();
+    this.showTips();
+  }
+
+  this.generateSudoku = function() {
+    this.initSudoku();
+    this.generateCell(0);
+  }
+
+  this.initSudoku = function() {
+    for (var row = 0; row < this.grid.rows; ++ row)
+      this.sudoku[row] = new Array(this.grid.cols);
+  }
+
+  this.generateCell = function(id) {
+    if (id == this.grid.rows * this.grid.cols) 
+      return(true);
+    
+    var row  = Math.floor(id / this.grid.rows);
+    var col  = id - (row * this.grid.rows)
+    var suit = this.shuffle(this.grid.suit);
+    
+    for (var index in suit) {
+      this.sudoku[row][col] = suit[index];
+
+      if ( this.isValidCell(row, col) )
+        if ( this.generateCell(id + 1) )
+          return(true);
+    }
+
+    this.sudoku[row][col] = null;
+    return(false);
+  }
+
+  this.isValidCell = function(row, col) {
+    return( this.isValidRow(row, col) &&
+            this.isValidColumn(row, col) &&
+            this.isValidRegion(row, col) );
+  }
+
+  this.isValidRow = function(row, col) {
+    var count = new Array();
+    for (var c = 0; c <= col; ++ c) {
+      if (count[ this.sudoku[row][c] ] != null)
+        return(false);
+      count[ this.sudoku[row][c] ] = 1;
+    }
+    return(true);
+  }
+
+  this.isValidColumn = function(row, col) {
+    var count = new Array();
+    for (var r = 0; r <= row; ++ r) {
+      if (count[ this.sudoku[r][col] ] != null)
+        return(false);
+      count[ this.sudoku[r][col] ] = 1;
+    }
+    return(true);
+  }
+  
+  this.isValidRegion = function(row, col) {
+    var count = new Array();
+    var rowi  = this.grid.region * Math.floor(row / this.grid.region);
+    var coli  = this.grid.region * Math.floor(col / this.grid.region);
+
+    for (var r = rowi; r <= row; ++ r)
+      for (var c = coli; c <= col; ++ c) {
+        if ( count[ this.sudoku[r][c] ] != null)
+          return(false);
+        count[ this.sudoku[r][c] ] = 1;
+      }
+
+    return(true);
+  }
+
+  this.showTips = function() {
+    var spans = this.shuffle(this.grid.spans);
+    for (var row = 0; row < this.grid.rows; ++ row) {
+      var tips = this.shuffle(this.grid.tips);
+      for (var col = 0; col < spans[row]; ++ col)
+        this.grid.setCellValue(row, tips[col], this.sudoku[row][ tips[col] ]);
+    }
+  }
+
+  this.validate = function() {
+    if ( this.isValidSudoku() )
+      alert("Congratulations!!! You have solved the Sudoku.");
+    else
+      alert("Sorry, that is not a valid solution for the Sudoku.");
+  }
+
+  this.isValidSudoku = function() {
+    var cells = this.grid.getCellValues();
+
+    var valid = true;
+    for (var row in this.sudoku)
+      for (var col in this.sudoku[row])
+        if (cells[row][col] != this.sudoku[row][col]) {
+          valid = false;
+          break;
+        }
+        
+    return(valid);
+  }
+
+  this.shuffle = function(suit) {
+    for (var i in suit)
+      suit = swap(suit, i, Math.floor( Math.random() * suit.length ) );
+    return(suit);
+  }
+}
+
+//
+// Grid
+//
+function Grid() {
+  this.rows   = 9;
+  this.cols   = 9;
+  this.region = 3;
+  this.spans  = new Array(4, 4, 4, 3, 3, 3, 2, 2, 2);
+  this.tips   = new Array(0, 1, 2, 3, 4, 5, 6, 7, 8);
+  this.suit   = new Array(1, 2, 3, 4, 5, 6, 7, 8, 9);
+
+  this.getCellId = function(row, col) {
+    return("c" + String( (row * this.rows) + col) );
+  }
+
+  this.getCell = function(id) {
+    return( document.getElementById(id) );
+  }
+
+  this.getCellValue = function(row, col) {
+    return( this.getCellValueById( this.getCellId(row, col) ) );
+  }
+
+  this.getCellValueById = function(id) {
+    return( this.getCell(id).value );
+  }
+
+  this.setCellValue = function(row, col, value) {
+    this.setCellValueById( this.getCellId(row, col), value);
+  }
+  
+  this.setCellValueById = function(id, value) {
+    var cell = this.getCell(id);
+    cell.value     = String(value);
+    cell.className = "cell-disable";
+    cell.readOnly  = "readonly";
+  }
+
+  this.getCellValues = function() {
+    var cells = new Array();
+
+    for (var row = 0; row < this.rows; ++ row) {
+      cells[row] = new Array();
+      for (var col = 0; col < this.cols; ++ col)
+        cells[row][col] = this.getCellValue(row, col);
+    }
+
+    return(cells);
+  }
+}
+
+//
+// Utils
+//
+function swap(array, i, j) {
+  var temp = array[i];
+  array[i] = array[j];
+  array[j] = temp;
+
+  return(array);
+}
+
+function getKeyCode(e) {
+  return(e? e.keyCode: window.event.keyCode);
+}
+
+//
+// Hack! Force full page reloading when user press F5
+//
+document.onkeydown = function(e){
+  if( getKeyCode(e) == 116) {
+     window.location.reload(true);
+     return(false);
+    }
+}
+
+//
+// Instance and start Game
+//
+var game = new Game;
+game.run();
+
+</script>
+
+</body>
+
+</html>
